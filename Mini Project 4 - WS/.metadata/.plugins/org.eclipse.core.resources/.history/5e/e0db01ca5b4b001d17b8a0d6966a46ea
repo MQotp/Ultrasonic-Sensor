@@ -1,0 +1,50 @@
+/*
+ * ultrasonic.c
+ *
+ *  Created on: Oct 14, 2022
+ *      Author: Mahmoud Qotp
+ */
+
+
+#include "ultrasonic.h"
+#include "std_types.h"
+#include "icu.h"
+#include "gpio.h"
+#include "util/delay.h"
+
+uint16 g_timeHigh = 0;
+
+void Ultrasonic_init(void)
+{
+	/* Initialize the ICU driver */
+	static Icu_ConfigType icuConfiguration = {F_CPU_8,RISING};
+	Icu_init(&icuConfiguration);
+	/* Setup the ICU call back function */
+	Icu_setCallBack(Ultrasonic_edgeProcessing);
+	/* Setup the direction for the trigger pin */
+	GPIO_setupPinDirection(ULTRASONIC_TRIGGER_PORT,ULTRASONIC_TRIGGER_PIN,PIN_OUTPUT);
+}
+
+
+
+void Ultrasonic_Trigger(void)
+{
+	GPIO_writePin(ULTRASONIC_TRIGGER_PORT,ULTRASONIC_TRIGGER_PIN,LOGIC_HIGH);
+	_delay_us(10);
+	GPIO_writePin(ULTRASONIC_TRIGGER_PORT,ULTRASONIC_TRIGGER_PIN,LOGIC_LOW);
+
+}
+
+
+uint16 Ultrasonic_readDistance(void)
+{
+	Icu_clearTimerValue();
+	Ultrasonic_Trigger();
+	Icu_setEdgeDetectionType(FALLING);
+
+}
+
+void Ultrasonic_edgeProcessing(void)
+{
+
+}

@@ -1,0 +1,125 @@
+/*
+ * ultrasonic.c
+ *
+ *  Created on: Oct 14, 2022
+ *      Author: Mahmoud Qotp
+ */
+
+
+#include "ultrasonic.h"
+#include "std_types.h"
+#include "icu.h"
+#include "gpio.h"
+#include "util/delay.h"
+
+/*
+ * Description : Function to initialize the Ultrasonic driver
+ * 	1. Set the required configuration of the ICU driver
+ * 	2. Set the required call back function.
+ * 	3. Enable the Trigger pin to be output
+ * 	4. Initialize Timer1 Registers
+ * 	INPUTS: No Inputs
+ * 	OUTPUTS: No Outputs
+ */
+
+void Ultrasonic_init(void)
+{
+	static Icu_ConfigType icuConfiguration = {F_CPU_8,RISING};
+	/* Setup the ICU call back function */
+	Icu_setCallBack(Ultrasonic_edgeProcessing);
+	/* Setup the direction for the trigger pin */
+	GPIO_setupPinDirection(ULTRASONIC_TRIGGER_PORT,ULTRASONIC_TRIGGER_PIN,PIN_OUTPUT);
+	/* Initialize the ICU driver */
+	Icu_init(&icuConfiguration);
+}
+
+
+/*
+ * Description : Function to Trigger the Ultrasonic sensor.
+ * Functionality: Set the trigger pin for 10 us or more then clear te pin again.
+ * 	INPUTS: No Inputs
+ * 	OUTPUTS: No Outputs
+ */
+
+void Ultrasonic_Trigger(void)
+{
+	GPIO_writePin(ULTRASONIC_TRIGGER_PORT,ULTRASONIC_TRIGGER_PIN,LOGIC_HIGH);
+	_delay_us(15);
+	GPIO_writePin(ULTRASONIC_TRIGGER_PORT,ULTRASONIC_TRIGGER_PIN,LOGIC_LOW);
+
+}
+
+/*
+ * Description : Function to read the distance.
+ * Functionality : Calculate the distance based on the sensor echo.
+ * 	INPUTS: No Inputs
+ * 	OUTPUTS: variable of type uint16 represents the distance
+ */
+
+uint16 Ultrasonic_readDistance(void)
+{
+	uint16 distance = 0;
+	Ultrasonic_Trigger();
+	distance = 0.017 * g_timerValue;
+
+#if (HCSR04_MODEL_ERROR_EVALUATION == 1)
+	/*Error Evaluation and correction based on the offset between the sensor value and the calculated value.
+	 * for less than 58 cm, the value measured differ from the sensor by offset equals 1.
+	 * for less than 130 cm, the value measured differ from the sensor by offset equals 2.
+	 * for less than 200 cm, the value measured differ from the sensor by offset equals 3.
+	 * for less than 270 cm, the value measured differ from the sensor by offset equals 4.
+	 * for less than 340 cm, the value measured differ from the sensor by offset equals 5.
+	 * for more than 340 cm, the value measured differ from the sensor by offset equals 6.
+	 * Knowing that the Range of this sensor is (2 cm ~ 400 cm).*/
+	if(distance < 58)
+	{
+		distance = distance + 1;
+	}
+	else if(distance < 130)
+	{
+		distance = distance + 2;
+	}
+	else if(distance < 200)
+	{
+		distance = distance + 3;
+	}
+	else if(distance < 270)
+	{
+		distance = distance + 4;
+	}
+	else if(distance < 340)
+	{
+		distance = distance + 5;
+
+	}
+	else
+	{
+		distance = distance + 6;
+	}
+#endif
+
+	return (distance);
+}
+
+
+/*
+ * Description : Function to get the counter value based on the echo set time.
+ * 	INPUTS: No Inputs
+ * 	OUTPUTS: No Outputs
+ */
+
+void Ultrasonic_edgeProcessing(void)
+{
+	g_edgeCount++;
+	if(g_edgeCount == 1)
+	{
+		Icu_clearTimerValue();
+		Icu_setEdgeDetectionType(FALLING);
+	}
+	else if(g_edgeCount == 2)
+	{
+		g_timerValue = Icu_getInputCaptureValue();
+		Icu_setEdgeDetectionType(RISING);
+		g_edgeCount = 0;
+	}
+}

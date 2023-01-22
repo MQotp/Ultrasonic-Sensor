@@ -1,0 +1,25 @@
+/*
+ * Mini_Project_4.c
+ *
+ *  Created on: Oct 14, 2022
+ *      Author: Mahmoud Qotp
+ */
+
+
+#include "lcd.h"
+#include "ultrasonic.h"
+
+int main(void)
+{
+	uint16 distance = 0;
+	LCD_init();
+	Ultrasonic_init();
+	SREG |= (1<<7);
+	LCD_displayString("Distance= ");
+	while(1)
+	{
+		distance = Ultrasonic_readDistance();
+		LCD_moveCursor(0,10);
+		LCD_intgerToString(distance);
+	}
+}

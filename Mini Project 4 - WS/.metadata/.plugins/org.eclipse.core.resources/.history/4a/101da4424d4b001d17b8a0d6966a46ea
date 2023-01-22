@@ -1,0 +1,23 @@
+/*
+ * ultrasonic.h
+ *
+ *  Created on: Oct 14, 2022
+ *      Author: Mahmoud Qotp
+ */
+
+#ifndef ULTRASONIC_H_
+#define ULTRASONIC_H_
+
+
+
+/*******************************************************************************
+ *                           Functions Prototypes                              *
+********************************************************************************/
+
+void Ultrasonic_init(void);
+
+void Ultrasonic_Trigger(void);
+
+uint16 Ultrasonic_readDistance(void);
+
+#endif /* ULTRASONIC_H_ */

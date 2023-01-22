@@ -1,0 +1,61 @@
+/*
+ * ultrasonic.h
+ *
+ *  Created on: Oct 14, 2022
+ *      Author: Mahmoud Qotp
+ */
+
+#ifndef ULTRASONIC_H_
+#define ULTRASONIC_H_
+
+/*******************************************************************************
+*                                    Includes                                  *
+********************************************************************************/
+#include "std_types.h"
+
+
+/*******************************************************************************
+*                                   Definitions                                *
+********************************************************************************/
+#define ULTRASONIC_TRIGGER_PORT PORTB_ID
+#define ULTRASONIC_TRIGGER_PIN PIN5_ID
+
+
+#define HCSR04_MODEL_ERROR_EVALUATION 1
+
+#define HCSR04_MODEL_MAXIMUM_RANGE 415
+/*******************************************************************************
+*                            Functions Prototypes                              *
+********************************************************************************/
+
+/*
+ * Description : Function to initialize the Ultrasonic driver
+ * 	1. Set the required configuration of the ICU driver
+ * 	2. Set the required call back function.
+ * 	3. Enable the Trigger pin to be output
+ * 	4. Initialize Timer1 Registers
+ */
+
+void Ultrasonic_init(void);
+
+/*
+ * Description : Function to Trigger the Ultrasonic sensor.
+ * Functionality: Set the trigger pin for 10 us or more then clear te pin again.
+ */
+
+void Ultrasonic_Trigger(void);
+
+/*
+ * Description : Function to read the distance.
+ * Functionality : Calculate the distance based on the sensor echo.
+ */
+
+uint16 Ultrasonic_readDistance(void);
+
+/*
+ * Description : Function to get the counter value based on the echo setted time.
+ */
+
+void Ultrasonic_edgeProcessing(void);
+
+#endif /* ULTRASONIC_H_ */

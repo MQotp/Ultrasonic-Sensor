@@ -1,0 +1,91 @@
+/*
+ * ultrasonic.c
+ *
+ *  Created on: Oct 14, 2022
+ *      Author: Mahmoud Qotp
+ */
+
+
+#include "ultrasonic.h"
+#include "std_types.h"
+#include "icu.h"
+#include "gpio.h"
+#include "util/delay.h"
+
+#define HCSR04_MODEL_ERROR_EVALUATION 1
+
+
+void Ultrasonic_init(void)
+{
+	static Icu_ConfigType icuConfiguration = {F_CPU_8,RISING};
+	/* Setup the ICU call back function */
+	Icu_setCallBack(Ultrasonic_edgeProcessing);
+	/* Setup the direction for the trigger pin */
+	GPIO_setupPinDirection(ULTRASONIC_TRIGGER_PORT,ULTRASONIC_TRIGGER_PIN,PIN_OUTPUT);
+	/* Initialize the ICU driver */
+	Icu_init(&icuConfiguration);
+}
+
+
+
+void Ultrasonic_Trigger(void)
+{
+	GPIO_writePin(ULTRASONIC_TRIGGER_PORT,ULTRASONIC_TRIGGER_PIN,LOGIC_HIGH);
+	_delay_us(15);
+	GPIO_writePin(ULTRASONIC_TRIGGER_PORT,ULTRASONIC_TRIGGER_PIN,LOGIC_LOW);
+
+}
+
+
+uint16 Ultrasonic_readDistance(void)
+{
+	uint16 distance = 0;
+	Ultrasonic_Trigger();
+	distance = 0.017 * g_timerValue;
+
+#if (HCSR04_MODEL_ERROR_EVALUATION == 1)
+	if(distance < 58)
+	{
+		distance = distance + 1;
+	}
+	else if(distance < 130)
+	{
+		distance = distance + 2;
+	}
+	else if(distance < 200)
+	{
+		distance = distance + 3;
+	}
+	else if(distance < 270)
+	{
+		distance = distance + 4;
+	}
+	else if(distance < 340)
+	{
+		distance = distance + 5;
+
+	}
+	else
+	{
+		distance = distance + 6;
+	}
+#endif
+
+	return (distance);
+}
+
+void Ultrasonic_edgeProcessing(void)
+{
+	g_edgeCount++;
+	if(g_edgeCount == 1)
+	{
+		Icu_clearTimerValue();
+		Icu_setEdgeDetectionType(FALLING);
+	}
+	else if(g_edgeCount == 2)
+	{
+		g_timerValue = Icu_getInputCaptureValue();
+		Icu_setEdgeDetectionType(RISING);
+		g_edgeCount = 0;
+	}
+}

@@ -1,0 +1,16 @@
+/*
+ * Mini_Project_4.c
+ *
+ *  Created on: Oct 14, 2022
+ *      Author: Mahmoud Qotp
+ */
+
+
+#include "lcd.h"
+#include "ultrasonic.h"
+
+int main(void)
+{
+	LCD_init();
+	Ultrasonic_init();
+}
